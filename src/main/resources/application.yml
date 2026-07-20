@@ -32,3 +32,7 @@ server:
 jobflow:
     cors:
         allowed-origins: http://localhost:3000
+    jwt:
+        secret: aa9e7c2ea009f09a17818fa59509c75dabd1572baf5a530b8790ce4430a00fbe
+        access-token-expiration-ms: 900000
+        refresh-token-expiration-ms: 604800000
