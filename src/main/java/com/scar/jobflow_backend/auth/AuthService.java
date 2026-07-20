@@ -1,9 +1,6 @@
 package com.scar.jobflow_backend.auth;
 
-import com.scar.jobflow_backend.auth.dto.AuthResponse;
-import com.scar.jobflow_backend.auth.dto.ConfirmEmailRequest;
-import com.scar.jobflow_backend.auth.dto.RegisterRequest;
-import com.scar.jobflow_backend.auth.dto.UserSummary;
+import com.scar.jobflow_backend.auth.dto.*;
 import com.scar.jobflow_backend.auth.verification.TokenType;
 import com.scar.jobflow_backend.auth.verification.VerificationTokenService;
 import com.scar.jobflow_backend.common.exception.BadRequestException;
@@ -69,5 +66,14 @@ public class AuthService {
 
         user.setEmailVerified(true);
         userRepository.save(user);
+    }
+
+    @Transactional
+    public void verifyResetCode(VerifyResetCodeRequest request) {
+
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new BadRequestException("Invalid email or code"));
+
+        verificationTokenService.checkCode(user, TokenType.PASSWORD_RESET, request.code());
     }
 }

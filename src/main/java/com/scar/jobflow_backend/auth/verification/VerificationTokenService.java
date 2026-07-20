@@ -62,6 +62,25 @@ public class VerificationTokenService {
 
     }
 
+    @Transactional(readOnly = true)
+    public void checkCode(User user, TokenType type, String rawCode) {
+        VerificationToken token = tokenRepository
+                .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), type)
+                .orElseThrow(() -> new BadRequestException("No verification code found. Please request a new one."));
+
+        if (token.isUsed()) {
+            throw new BadRequestException("This code has already been used. Please request a new one.");
+        }
+
+        if (token.isExpired()) {
+            throw new BadRequestException("This code has expired. Please request a new one.");
+        }
+
+        if (!passwordEncoder.matches(rawCode, token.getCodeHash())) {
+            throw new BadRequestException("Invalid verification code.");
+        }
+    }
+
     private String generateNumericCode() {
         int code = RANDOM.nextInt((int) Math.pow(10, CODE_LENGTH));
         return String.format("%0" + CODE_LENGTH + "d", code);

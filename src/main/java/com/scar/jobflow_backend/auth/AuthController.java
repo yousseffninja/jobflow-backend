@@ -1,8 +1,6 @@
 package com.scar.jobflow_backend.auth;
 
-import com.scar.jobflow_backend.auth.dto.AuthResponse;
-import com.scar.jobflow_backend.auth.dto.ConfirmEmailRequest;
-import com.scar.jobflow_backend.auth.dto.RegisterRequest;
+import com.scar.jobflow_backend.auth.dto.*;
 import com.scar.jobflow_backend.common.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
+
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(
@@ -35,5 +35,31 @@ public class AuthController {
     ) {
         authService.confirmEmail(request);
         return ResponseEntity.ok(ApiResponse.success("Email verified successfully", null));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request
+    ) {
+        passwordResetService.forgotPassword(request);
+        return ResponseEntity.ok(
+                ApiResponse.success("If that email exists, a reset code has been sent", null)
+        );
+    }
+
+    @PostMapping("/verify-reset-code")
+    public ResponseEntity<ApiResponse<Void>> verifyResetCode(
+            @Valid @RequestBody VerifyResetCodeRequest request
+    ) {
+        passwordResetService.verifyResetCode(request);
+        return ResponseEntity.ok(ApiResponse.success("Code verified", null));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request
+    ) {
+        passwordResetService.resetPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("Password reset successfully", null));
     }
 }
