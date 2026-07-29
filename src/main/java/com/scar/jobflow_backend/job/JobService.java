@@ -55,14 +55,20 @@ public class JobService {
         return jobMapper.toResponse(saved);
     }
 
+    @Transactional(readOnly = true)
     public Page<JobResponse> search(
             JobStatus status, Priority priority, UUID companyId, String search, Pageable pageable
     ) {
         UUID userId = currentUserProvider.getCurrentUserId();
-        return jobRepository.search(userId, status, priority, companyId, search, pageable)
+        String searchPattern = (search == null || search.isBlank())
+                ? null
+                : "%" + search.toLowerCase() + "%";
+
+        return jobRepository.search(userId, status, priority, companyId, searchPattern, pageable)
                 .map(jobMapper::toResponse);
     }
 
+    @Transactional(readOnly = true)
     public JobResponse getById(UUID id) {
         UUID userId = currentUserProvider.getCurrentUserId();
         Job job = jobRepository.findByIdAndUserId(id, userId)
@@ -111,6 +117,7 @@ public class JobService {
         return jobMapper.toResponse(saved);
     }
 
+    @Transactional(readOnly = true)
     public List<JobStatusHistoryResponse> getStatusHistory(UUID id) {
         UUID userId = currentUserProvider.getCurrentUserId();
         jobRepository.findByIdAndUserId(id, userId)

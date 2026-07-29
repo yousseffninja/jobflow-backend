@@ -19,7 +19,7 @@ public interface JobRepository extends JpaRepository<Job, UUID> {
             AND (:status IS NULL OR j.currentStatus = :status)
             AND (:priority IS NULL OR j.priority = :priority)
             AND (:companyId IS NULL OR j.company.id = :companyId)
-            AND (:search IS NULL OR LOWER(j.title) LIKE LOWER(CONCAT('%', :search, '%')))
+            AND (:search IS NULL OR LOWER(j.title) LIKE :search)
             """)
     Page<Job> search(
             @Param("userId") UUID userId,
