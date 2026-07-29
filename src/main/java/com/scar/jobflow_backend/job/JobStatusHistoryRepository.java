@@ -13,7 +13,9 @@ public interface JobStatusHistoryRepository extends JpaRepository<JobStatusHisto
     List<JobStatusHistory> findByJobIdOrderByChangedAtDesc(UUID jobId);
     @Query("""
             SELECT h FROM JobStatusHistory h
-            WHERE h.job.user.id = :userId
+            JOIN FETCH h.job j
+            JOIN FETCH j.company
+            WHERE j.user.id = :userId
             ORDER BY h.changedAt DESC
             """)
     List<JobStatusHistory> findRecentForUser(@Param("userId") UUID userId, Pageable pageable);
