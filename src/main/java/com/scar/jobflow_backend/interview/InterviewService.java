@@ -54,6 +54,7 @@ public class InterviewService {
 
     }
 
+    @Transactional(readOnly = true)
     public Page<InterviewResponse> list(Pageable pageable) {
 
         UUID userId = currentUserProvider.getCurrentUserId();
@@ -62,6 +63,7 @@ public class InterviewService {
 
     }
 
+    @Transactional(readOnly = true)
     public List<InterviewResponse> listUpcoming(int days) {
 
         UUID userId = currentUserProvider.getCurrentUserId();
@@ -74,6 +76,7 @@ public class InterviewService {
 
     }
 
+    @Transactional(readOnly = true)
     public List<InterviewResponse> listByJob(UUID jobId) {
         UUID userId = currentUserProvider.getCurrentUserId();
         jobRepository.findByIdAndUserId(jobId, userId)
@@ -84,6 +87,7 @@ public class InterviewService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public InterviewResponse getById(UUID id) {
         UUID userId = currentUserProvider.getCurrentUserId();
         Interview interview = interviewRepository.findByIdAndUserId(id, userId)
