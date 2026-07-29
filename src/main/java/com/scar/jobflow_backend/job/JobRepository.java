@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,4 +30,10 @@ public interface JobRepository extends JpaRepository<Job, UUID> {
             @Param("search") String search,
             Pageable pageable
     );
+    @Query("""
+            SELECT j.currentStatus, COUNT(j) FROM Job j
+            WHERE j.user.id = :userId
+            GROUP BY j.currentStatus
+            """)
+    List<Object[]> countByStatusForUser(@Param("userId") UUID userId);
 }
