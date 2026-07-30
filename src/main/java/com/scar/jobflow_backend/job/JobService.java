@@ -4,6 +4,8 @@ import com.scar.jobflow_backend.common.exception.ResourceNotFoundException;
 import com.scar.jobflow_backend.company.Company;
 import com.scar.jobflow_backend.company.CompanyRepository;
 import com.scar.jobflow_backend.job.dto.*;
+import com.scar.jobflow_backend.notification.NotificationService;
+import com.scar.jobflow_backend.notification.NotificationType;
 import com.scar.jobflow_backend.security.CurrentUserProvider;
 import com.scar.jobflow_backend.user.User;
 import com.scar.jobflow_backend.user.UserRepository;
@@ -27,6 +29,7 @@ public class JobService {
     private final UserRepository userRepository;
     private final JobMapper jobMapper;
     private final CurrentUserProvider currentUserProvider;
+    private final NotificationService notificationService;
 
     @Transactional
     public JobResponse create(JobRequest request) {
@@ -98,25 +101,6 @@ public class JobService {
         return jobMapper.toResponse(saved);
     }
 
-    @Transactional
-    public JobResponse updateStatus(UUID id, JobStatusUpdateRequest request) {
-        UUID userId = currentUserProvider.getCurrentUserId();
-        Job job = jobRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> ResourceNotFoundException.of("Job", id));
-
-        JobStatus oldStatus = job.getCurrentStatus();
-        job.setCurrentStatus(request.status());
-
-        if (request.status() == JobStatus.APPLIED && job.getAppliedAt() == null) {
-            job.setAppliedAt(LocalDateTime.now());
-        }
-
-        Job saved = jobRepository.save(job);
-        recordStatusChange(saved, oldStatus, request.status(), request.note());
-
-        return jobMapper.toResponse(saved);
-    }
-
     @Transactional(readOnly = true)
     public List<JobStatusHistoryResponse> getStatusHistory(UUID id) {
         UUID userId = currentUserProvider.getCurrentUserId();
@@ -145,4 +129,33 @@ public class JobService {
                 .build();
         historyRepository.save(history);
     }
+
+    @Transactional
+    public JobResponse updateStatus(UUID id, JobStatusUpdateRequest request) {
+        UUID userId = currentUserProvider.getCurrentUserId();
+        Job job = jobRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> ResourceNotFoundException.of("Job", id));
+
+        JobStatus oldStatus = job.getCurrentStatus();
+        job.setCurrentStatus(request.status());
+
+        if (request.status() == JobStatus.APPLIED && job.getAppliedAt() == null) {
+            job.setAppliedAt(LocalDateTime.now());
+        }
+
+        Job saved = jobRepository.save(job);
+        recordStatusChange(saved, oldStatus, request.status(), request.note());
+
+        notificationService.createAndPush(
+                userId,
+                NotificationType.STATUS_CHANGE,
+                "Status updated",
+                job.getTitle() + " moved to " + request.status().name(),
+                "JOB",
+                job.getId()
+        );
+
+        return jobMapper.toResponse(saved);
+    }
+
 }

@@ -6,6 +6,8 @@ import com.scar.jobflow_backend.interview.dto.InterviewRequest;
 import com.scar.jobflow_backend.interview.dto.InterviewResponse;
 import com.scar.jobflow_backend.job.Job;
 import com.scar.jobflow_backend.job.JobRepository;
+import com.scar.jobflow_backend.notification.NotificationService;
+import com.scar.jobflow_backend.notification.NotificationType;
 import com.scar.jobflow_backend.security.CurrentUserProvider;
 import com.scar.jobflow_backend.user.User;
 import com.scar.jobflow_backend.user.UserRepository;
@@ -28,13 +30,13 @@ public class InterviewService {
     private final UserRepository userRepository;
     private final InterviewMapper interviewMapper;
     private final CurrentUserProvider currentUserProvider;
+    private final NotificationService notificationService;
 
     @Transactional
     public InterviewResponse create(InterviewRequest request) {
-
         UUID userId = currentUserProvider.getCurrentUserId();
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> ResourceNotFoundException.of("User", userId));
         Job job = jobRepository.findByIdAndUserId(request.jobId(), userId)
                 .orElseThrow(() -> ResourceNotFoundException.of("Job", request.jobId()));
 
@@ -50,8 +52,18 @@ public class InterviewService {
                 .reminderSent(false)
                 .build();
 
-        return  interviewMapper.toResponse(interviewRepository.save(interview));
+        Interview saved = interviewRepository.save(interview);
 
+        notificationService.createAndPush(
+                userId,
+                NotificationType.INTERVIEW_SCHEDULED,
+                "Interview scheduled",
+                job.getTitle() + " interview scheduled for " + request.scheduledAt(),
+                "INTERVIEW",
+                saved.getId()
+        );
+
+        return interviewMapper.toResponse(saved);
     }
 
     @Transactional(readOnly = true)
