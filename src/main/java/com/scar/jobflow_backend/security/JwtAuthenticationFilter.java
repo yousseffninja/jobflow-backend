@@ -31,16 +31,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String authHeader = request.getHeader(AUTH_HEADER);
+        String token = extractToken(request);
 
-        if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        String token = authHeader.substring(BEARER_PREFIX.length());
-
-        if (jwtService.isTokenValid(token) && "ACCESS".equals(jwtService.extractTokenType(token))) {
+        if (token != null
+                && jwtService.isTokenValid(token)
+                && "ACCESS".equals(jwtService.extractTokenType(token))) {
 
             UUID userId = jwtService.extractUserId(token);
 
@@ -51,5 +46,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        String authHeader = request.getHeader(AUTH_HEADER);
+        if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
+            return authHeader.substring(BEARER_PREFIX.length());
+        }
+
+
+        if (request.getRequestURI().endsWith("/api/v1/notifications/stream")) {
+            return request.getParameter("token");
+        }
+
+        return null;
     }
 }
