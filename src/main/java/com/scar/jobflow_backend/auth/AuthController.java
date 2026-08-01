@@ -106,8 +106,8 @@ public class AuthController {
     private void setRefreshCookie(HttpServletResponse httpResponse, String rawRefreshToken) {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", rawRefreshToken)
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
+                .secure(true)
+                .sameSite("None")
                 .path("/api/v1/auth")
                 .maxAge(Duration.ofDays(7))
                 .build();
@@ -118,8 +118,8 @@ public class AuthController {
     private void clearRefreshCookie(HttpServletResponse httpResponse) {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
+                .secure(true)
+                .sameSite("None")
                 .path("/api/v1/auth")
                 .maxAge(0)
                 .build();
