@@ -28,7 +28,10 @@ spring:
         validate-on-migrate: false
 
 server:
-    port: 8081
+    address: 0.0.0.0
+    port: ${PORT:8081}
+
+
 
 jobflow:
     cors:
@@ -37,3 +40,6 @@ jobflow:
         secret: aa9e7c2ea009f09a17818fa59509c75dabd1572baf5a530b8790ce4430a00fbe
         access-token-expiration-ms: 900000
         refresh-token-expiration-ms: 604800000
+    ai:
+        provider-url: http://localhost:11434
+        model: mistral
