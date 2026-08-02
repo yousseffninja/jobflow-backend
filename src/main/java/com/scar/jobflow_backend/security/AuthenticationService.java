@@ -88,8 +88,8 @@ public class AuthenticationService {
     @Transactional
     public TokenIssueResult issueTokensFor(User user) {
 
-        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail());
-        String rawRefreshToken = jwtService.generateRefreshToken(user.getId(), user.getEmail());
+        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), user.getRole().name());
+        String rawRefreshToken = jwtService.generateRefreshToken(user.getId(), user.getEmail(), user.getRole().name());
 
         storeRefreshToken(user, rawRefreshToken);
 
