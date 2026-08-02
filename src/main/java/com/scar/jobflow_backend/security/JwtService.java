@@ -31,28 +31,31 @@ public class JwtService {
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
     }
 
-    public String generateAccessToken(UUID userId, String email) {
-        return buildToken(userId, email, accessTokenExpirationMs, "ACCESS");
+    public String generateAccessToken(UUID userId, String email, String role) {
+        return buildToken(userId, email, role, accessTokenExpirationMs, "ACCESS");
     }
 
-    public String generateRefreshToken(UUID userId, String email) {
-        return buildToken(userId, email, refreshTokenExpirationMs, "REFRESH");
+    public String generateRefreshToken(UUID userId, String email, String role) {
+        return buildToken(userId, email, role, refreshTokenExpirationMs, "REFRESH");
     }
 
-    private String buildToken(UUID userId, String email, long expirationMs, String tokenType) {
-
+    private String buildToken(UUID userId, String email, String role, long expirationMs, String tokenType) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
 
         return Jwts.builder()
                 .subject(userId.toString())
                 .claim("email", email)
+                .claim("role", role)
                 .claim("tokenType", tokenType)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
+    }
 
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
     public UUID extractUserId(String token) {
