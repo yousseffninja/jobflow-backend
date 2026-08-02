@@ -43,3 +43,5 @@ jobflow:
     ai:
         provider-url: http://localhost:11434
         model: mistral
+    oauth:
+        frontend-redirect-url: ${JOBFLOW_OAUTH_REDIRECT_URL:http://localhost:3000/oauth-callback}
