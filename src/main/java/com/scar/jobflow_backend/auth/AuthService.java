@@ -1,10 +1,12 @@
 package com.scar.jobflow_backend.auth;
 
-import com.scar.jobflow_backend.auth.dto.*;
+import com.scar.jobflow_backend.auth.dto.ConfirmEmailRequest;
+import com.scar.jobflow_backend.auth.dto.RegisterRequest;
 import com.scar.jobflow_backend.auth.verification.TokenType;
 import com.scar.jobflow_backend.auth.verification.VerificationTokenService;
 import com.scar.jobflow_backend.common.exception.BadRequestException;
 import com.scar.jobflow_backend.common.mail.MailService;
+import com.scar.jobflow_backend.security.AuthenticationService;
 import com.scar.jobflow_backend.user.Role;
 import com.scar.jobflow_backend.user.User;
 import com.scar.jobflow_backend.user.UserRepository;
@@ -21,9 +23,10 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final VerificationTokenService verificationTokenService;
     private final MailService mailService;
+    private final AuthenticationService authenticationService;
 
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public TokenIssueResult register(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.email())) {
             throw new BadRequestException("An account with this email already exists");
@@ -42,14 +45,7 @@ public class AuthService {
         String code = verificationTokenService.generateCode(savedUser, TokenType.EMAIL_VERIFICATION);
         mailService.sendVerificationCode(savedUser.getEmail(), code);
 
-        UserSummary userSummary = new UserSummary(
-                savedUser.getId(),
-                savedUser.getEmail(),
-                savedUser.getFullName(),
-                savedUser.isEmailVerified()
-        );
-
-        return new AuthResponse("placeholder-token", userSummary);
+        return authenticationService.issueTokensFor(savedUser);
     }
 
     @Transactional
@@ -66,14 +62,5 @@ public class AuthService {
 
         user.setEmailVerified(true);
         userRepository.save(user);
-    }
-
-    @Transactional
-    public void verifyResetCode(VerifyResetCodeRequest request) {
-
-        User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new BadRequestException("Invalid email or code"));
-
-        verificationTokenService.checkCode(user, TokenType.PASSWORD_RESET, request.code());
     }
 }

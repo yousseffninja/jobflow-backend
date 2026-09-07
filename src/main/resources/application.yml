@@ -25,10 +25,23 @@ spring:
     flyway:
         enabled: true
         clean-disabled: true
+        validate-on-migrate: false
 
 server:
-    port: 8081
+    address: 0.0.0.0
+    port: ${PORT:8081}
+
+
 
 jobflow:
     cors:
         allowed-origins: http://localhost:3000
+    jwt:
+        secret: aa9e7c2ea009f09a17818fa59509c75dabd1572baf5a530b8790ce4430a00fbe
+        access-token-expiration-ms: 900000
+        refresh-token-expiration-ms: 604800000
+    ai:
+        provider-url: http://localhost:11434
+        model: mistral
+    oauth:
+        frontend-redirect-url: ${JOBFLOW_OAUTH_REDIRECT_URL:http://localhost:3000/oauth-callback}
